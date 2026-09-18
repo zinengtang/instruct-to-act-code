@@ -1,0 +1,4 @@
+# control for the ground-truth-completion run: identical, but the original template annotator (segment-boundary labels)
+annotator_type: template
+annotate_once: true
+env_logs: true

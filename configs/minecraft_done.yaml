@@ -1,0 +1,8 @@
+# MC-200M retrained with the ground-truth completion method (inventory-event hindsight annotator, no VLM, no timer).
+steps: 4_000_000
+annotator_type: inventory
+annotate_once: true
+annotate_interval: 2000
+save_every: 1800          # seconds
+eval_every: 100_000_000
+run_envs: 4

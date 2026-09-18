@@ -1,0 +1,8 @@
+# Smoke run: validate the full training pipeline end-to-end at small scale.
+# 50M architecture unchanged; short horizon; $0 template annotator (the
+# language pathway + stop head still train; gpt4o stays for eval planning).
+steps: 150_000
+annotator_type: template
+save_every: 10_000
+eval_every: 50_000
+prefill: 2500

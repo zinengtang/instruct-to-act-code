@@ -1,0 +1,42 @@
+# ── DreamerV3 core ─────────────────────────────────────────────────────────────
+ale_py>=0.10.1
+autorom[accept-rom-license]==0.6.1
+av
+chex
+colored_traceback
+einops
+elements>=3.19.1
+google-resumable-media>=2.7.2
+granular>=0.20.3
+ipdb
+jaxtyping
+ninjax>=3.5.1
+numpy<2  # DMLab: <2, MineRLv1.0: <1.24
+# jax[cuda12] — install separately via conda or CUDA wheel; do not pin here
+optax
+portal>=3.5.0
+scope>=0.4.4
+
+# ── Language + annotation ──────────────────────────────────────────────────────
+sentence-transformers>=2.2.0
+openai>=1.0.0
+anthropic>=0.20.0
+
+# ── Environments ───────────────────────────────────────────────────────────────
+gymnasium>=0.28.0
+crafter>=1.8.0
+# minerl: install separately — old gym<0.20 dep breaks modern setuptools
+#   READTHEDOCS=1 pip install minerl==0.4.4 --no-build-isolation
+# dm-control>=1.0.0    # optional: DMLab
+overcooked-ai
+
+# ── Analysis / experiments ─────────────────────────────────────────────────────
+scipy>=1.11.0
+matplotlib>=3.7.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+wandb>=0.15.0
+tqdm>=4.65.0
+pillow>=10.0.0
+imageio>=2.31.0
+torchvision

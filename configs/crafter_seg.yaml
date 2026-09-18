@@ -1,0 +1,13 @@
+# Segment-and-label annotation: a local VLM splits per-env chunks into subgoal segments (completion step + instruction);
+# ground-truth achievement events overlay their own windows. Stop head sees VLM boundaries everywhere, true events where available.
+steps: 300_000
+annotator_type: segment
+annotate_once: true
+annotate_interval: 2000
+segment_chunk: 192
+segment_done_len: 4
+segment_frames: 8
+save_every: 600
+eval_every: 100_000
+prefill: 2500
+env_logs: true

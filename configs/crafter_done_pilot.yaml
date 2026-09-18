@@ -1,0 +1,4 @@
+steps: 20000
+save_every: 120
+eval_every: 1_000_000
+annotate_interval: 1000

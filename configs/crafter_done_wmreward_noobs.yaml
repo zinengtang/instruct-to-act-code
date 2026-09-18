@@ -1,0 +1,3 @@
+wm_reward: true
+wm_reward_horizon: 10
+finish_obs: false

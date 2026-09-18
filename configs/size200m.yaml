@@ -1,0 +1,7 @@
+# 200M controller (size200m) — Table 2, App. A.3
+# Used for ablations in Sec. 4.4 (paired with 7B VLM in scalability study).
+rssm_deter:   8192
+rssm_hidden:  1024
+rssm_classes: 64
+depth:        64
+units:        1024

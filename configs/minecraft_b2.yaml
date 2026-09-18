@@ -1,0 +1,9 @@
+# Continuation of the B run: resume mc200m_b_seed0 from 2.5M and train to 8M.
+# Same architecture/annotation regime; fresh max_calls budget for this run.
+steps: 8_000_000
+annotator_type: gpt4o
+annotate_once: true
+annotate_fraction: 0.5
+annotate_max_calls: 45000
+save_every: 25_000
+eval_every: 2_000_000

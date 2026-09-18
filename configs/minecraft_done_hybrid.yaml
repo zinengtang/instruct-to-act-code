@@ -1,0 +1,11 @@
+# MC-200M, hybrid annotation: dense VLM instructions (local open VLM via vLLM, ~50% of timesteps, as in minecraft_b)
+# + ground-truth completion labels from inventory events (no boundary/timer completion labels).
+steps: 4_000_000
+annotator_type: hybrid
+annotate_once: true
+annotate_fraction: 0.5
+annotate_max_calls: 400000
+annotate_interval: 2000
+save_every: 1800          # seconds
+eval_every: 100_000_000
+run_envs: 4

@@ -1,0 +1,11 @@
+# MC-200M fine-tune from the released mc-200m checkpoint with option 4 (world-model event reward + imagination).
+# Annotation: ground-truth inventory events only (no VLM). The release ckpt carries step ~2.5M; steps is the absolute target.
+steps: 4_500_000
+annotator_type: inventory
+annotate_once: true
+annotate_interval: 2000
+save_every: 1800
+eval_every: 100_000_000
+run_envs: 4
+wm_reward: true
+wm_reward_horizon: 10

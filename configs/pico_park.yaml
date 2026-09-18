@@ -1,0 +1,12 @@
+# Pico Park (cooperative puzzle platformer) — Table 1
+env_name: pico_park
+n_agents: 4            # 2–8 players; paper tests 2–8
+
+task_guidance: >
+  Complete cooperative puzzle-platforming levels that demand synchronized actions
+  (stacking, shared switches, tethered movement). All agents must reach the goal.
+
+episode_length: 600
+steps: 500_000
+eval_episodes: 48       # 48 classic levels (App B)
+planning_mode: online

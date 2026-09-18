@@ -1,0 +1,3 @@
+# eval override: timer-only hand-off (stop head never fires)
+stop_threshold: 1.1
+max_instr_steps: 200

@@ -1,0 +1,9 @@
+# Option B: 200M controller on MineRL Diamond, 2.5M steps, real VLM annotation.
+# Merge order: base.yaml, minecraft.yaml, size200m.yaml, THIS FILE (last wins).
+steps: 2_500_000
+annotator_type: gpt4o          # backend calls gpt-4o-mini with 2 low-detail frames
+annotate_once: true            # incremental cursor: each timestep annotated once
+annotate_fraction: 0.5
+annotate_max_calls: 40000      # hard budget guard (~$40 ceiling at ~$0.001/call)
+save_every: 25_000
+eval_every: 1_000_000

@@ -1,0 +1,35 @@
+# MineRL ObtainDiamond (MC-Dia) — Table 1
+env_name: minecraft
+task_guidance: >
+  Obtain a diamond in survival Minecraft starting from scratch.
+  Key milestones: wood → planks → crafting table → sticks → wooden pickaxe →
+  stone → stone pickaxe → iron ore → furnace → iron ingot → iron pickaxe →
+  diamonds. Die = episode over.
+
+episode_length: 18000   # 15 min at 20fps = 18 000 frames (App B)
+action_repeat: 1
+steps: 10_000_000
+
+# 800M controller (main results)
+rssm_deter: 24576
+rssm_hidden: 3072
+rssm_classes: 192
+units: 3072
+depth: 192
+
+annotator_type: gpt4o
+task_guidance_short: "obtain diamond in Minecraft"
+eval_episodes: 500      # MineRL competition protocol (App B)
+
+# 4 env workers: 2x throughput over baseline without overwhelming Java server startup.
+# 8 caused Malmo socket timeouts during the ~10 min JAX JIT-compile warmup.
+run_envs: 4
+
+# ── Planner↔controller instruction gating (eval) ──────────────────────────────
+# Diamond is a long-horizon tech tree: the agent must advance through many
+# subgoals. A single noisy p_stop crossing should not swap instructions, and the
+# agent must never get permanently stuck on one subgoal.
+stop_threshold: 0.5
+stop_patience: 2       # require p_stop>thr for 2 consecutive steps (debounce)
+min_instr_steps: 4     # let each instruction run at least this long before stop
+max_instr_steps: 200   # force a replan after 200 steps even if p_stop never fires

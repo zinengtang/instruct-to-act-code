@@ -1,0 +1,11 @@
+# Ground-truth completion study: crafter 50M, hindsight achievement annotator (no VLM, no timer).
+# Every achievement unlock defines a segment with instruction = achievement sentence; complete=1 from the
+# unlock step on. Stop loss goes through the main optimizer (bc_separate_batch false) so the RSSM is shaped by it.
+steps: 300_000
+annotator_type: achievement
+annotate_once: true
+annotate_interval: 2000
+save_every: 600      # SECONDS (embodied LocalClock), not steps: 25_000 meant "never" on a 1-h run -> step-0 checkpoints
+eval_every: 100_000
+prefill: 2500
+env_logs: true

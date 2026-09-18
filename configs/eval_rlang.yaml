@@ -1,0 +1,7 @@
+# eval override: hand-off from the event-reward head (option 4), running max over the last 4 steps, no timer
+stop_signal: r_lang
+stop_window: 4
+stop_threshold: 0.5
+stop_patience: 1
+min_instr_steps: 4
+max_instr_steps: 100000

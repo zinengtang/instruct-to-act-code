@@ -1,0 +1,67 @@
+# Base config — merged on top of dreamerv3 defaults.
+# Per-environment files override these.
+
+# ── Environment ────────────────────────────────────────────────────────────
+env_name: crafter
+episode_length: 1000
+action_repeat: 1
+
+# ── Training ───────────────────────────────────────────────────────────────
+steps: 5_000_000
+batch_size: 16
+batch_length: 64
+replay_size: 1_000_000
+prefill: 2_500
+eval_every: 10_000
+log_every: 1_000
+save_every: 10_000
+num_seeds: 5           # seeds for uncertainty estimates (exp_multiseed_ci)
+
+# ── Language / annotation ──────────────────────────────────────────────────
+lang_size: 384                      # MiniLM-L6-H384
+annotator_type: gpt4o               # gpt4o | qwen | gemma | llava | template | cluster | random
+annotate_fraction: 0.50             # 50% of buffer annotated per pass (§3.4)
+annotate_interval: 5000             # training steps between annotation passes
+segment_min_len: 32                 # min actions per annotated segment (was 1 — too short)
+segment_max_len: 120                # max actions per annotated segment (~6s at 20fps)
+task_guidance: ""                   # env-specific description for the VLM
+lang_bc_scale: 1.0                  # λ_BC
+bc_separate_batch: false            # false = original mixed BC+RL in one optimizer step (default)
+lang_stop_scale: 1.0
+stop_head_units: 512
+
+# ── Controller model (50M defaults; see minecraft.yaml for 800M) ─────────────
+# Scales match dreamerv3 configs; override per-env as needed.
+rssm_deter: 4096       # 50M: 4096 | 200M: 8192 | 800M: 24576
+rssm_hidden: 512       # 50M: 512  | 200M: 1024  | 800M: 3072
+rssm_classes: 32       # 50M: 32   | 200M: 64    | 800M: 192
+units: 512             # MLP hidden units
+depth: 32              # CNN depth
+
+# ── Dreamer hyperparameters (App A.3) ──────────────────────────────────────
+kl_scale: 1.0          # β
+free_nats: 1.5
+reward_scale: 1.0      # λ_r
+cont_scale: 1.0        # λ_c
+imag_horizon: 15       # H
+lambda_: 0.95
+actor_entropy: 1e-3
+gamma: 0.997
+lr: 1e-4        # lowered from 3e-4; 3e-4 caused dyn/rep divergence (grad_norm 3000+ on H200)
+grad_clip: 0.3  # AGC clip ratio (agc in dreamerv3 opt); was unwired before, now passed through
+
+# ── Planner ────────────────────────────────────────────────────────────────
+planner: gpt4o          # gpt4o | qwen | gemma | llava
+planning_mode: online   # online (Alg 1) | offline (Alg 2)
+stop_threshold: 0.5
+fixed_cadence: 16       # steps between instructions (fixed-cadence mode)
+instruction_mode: vlm_decided  # vlm_decided | fixed_cadence | fully_vlm
+
+# ── Evaluation ─────────────────────────────────────────────────────────────
+eval_episodes: 100      # §4.2: 100 episodes per eval
+eval_temperature: 0.8
+eval_seed: 0
+
+# ── Logging ────────────────────────────────────────────────────────────────
+wandb: false
+wandb_project: instruct_to_act

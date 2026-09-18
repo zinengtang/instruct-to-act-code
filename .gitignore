@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.egg-info/
+.openai
+openai_key.txt
+dreamerv3/
+logdir/
+logs/
+results/
+runs/
+wandb/
+checkpoints/*
+!checkpoints/README.md
+*.ckpt
+*.pkl
+.DS_Store

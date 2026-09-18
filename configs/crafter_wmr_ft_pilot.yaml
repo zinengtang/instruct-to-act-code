@@ -1,0 +1,6 @@
+steps: 320000
+save_every: 120
+eval_every: 1_000_000
+annotate_interval: 1000
+wm_reward: true
+wm_reward_horizon: 10

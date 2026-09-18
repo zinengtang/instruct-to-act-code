@@ -1,0 +1,13 @@
+# MindCraft multi-agent Minecraft collaboration (Table 1)
+env_name: mindcraft
+n_agents: 2
+
+task_guidance: >
+  Collaboratively complete cooking, crafting, and construction tasks in Minecraft.
+  Exchange natural-language messages to coordinate resources and knowledge.
+  Tasks provide recipes/blueprints that split required materials across agents.
+
+episode_length: 18000
+steps: 1_000_000
+eval_episodes: 100
+planning_mode: online

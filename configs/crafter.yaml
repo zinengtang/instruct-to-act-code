@@ -1,0 +1,11 @@
+# Crafter (Hafner 2021) — Table 1
+env_name: crafter
+task_guidance: >
+  Survive and progress in a 2D open world by unlocking semantically meaningful
+  achievements (find water, craft tools, defeat enemies, etc.).
+  Metric: geometric mean of 22 achievement success rates.
+
+episode_length: 10000
+steps: 1_000_000
+eval_episodes: 100
+annotator_type: gpt4o

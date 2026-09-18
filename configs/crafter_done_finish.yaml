@@ -1,0 +1,2 @@
+# ablation: [finish] as an extra discrete action (no-op in the env); BC target at the event step is [finish]
+finish_action: true

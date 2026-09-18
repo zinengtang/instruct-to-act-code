@@ -1,0 +1,11 @@
+# DeepMind Lab — explore_goal_locations (Table 1)
+env_name: dmlab
+dmlab_task: explore_goal_locations_small
+
+task_guidance: >
+  Navigate a 3D maze and reach goal locations under partial observability.
+  Goals are marked with objects; reach them as quickly as possible.
+
+episode_length: 900
+steps: 1_000_000
+eval_episodes: 100

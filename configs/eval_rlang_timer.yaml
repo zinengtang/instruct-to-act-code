@@ -1,0 +1,7 @@
+# eval override: event-reward hand-off plus 200-step timer fallback
+stop_signal: r_lang
+stop_window: 4
+stop_threshold: 0.5
+stop_patience: 1
+min_instr_steps: 4
+max_instr_steps: 200

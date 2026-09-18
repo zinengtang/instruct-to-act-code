@@ -1,0 +1,12 @@
+# Atari ALE — Table 1
+env_name: atari
+atari_game: pong        # override per game
+action_repeat: 4
+episode_length: 108000  # 30 min at 60fps
+
+task_guidance: >
+  Achieve maximum game score. Use the available actions efficiently.
+
+steps: 1_000_000
+eval_episodes: 100
+# Atari evaluation: sticky-actions (p=0.25), no-op starts (up to 30)

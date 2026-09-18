@@ -1,0 +1,13 @@
+# Overcooked-AI multi-agent (Table 1)
+env_name: overcooked
+overcooked_layout: asymmetric_advantages
+
+task_guidance: >
+  Cooperatively cook and deliver soups as quickly as possible.
+  Coordinate with your partner to split the work efficiently.
+
+n_agents: 2
+episode_length: 400
+steps: 500_000_000
+eval_episodes: 100
+planning_mode: online

@@ -1,0 +1,3 @@
+# eval override: default hand-off (stop head + 200-step timer fallback)
+stop_threshold: 0.5
+max_instr_steps: 200

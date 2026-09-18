@@ -1,0 +1,6 @@
+# planner harness: text state + controller feedback + anomaly detector (reference from recorded old-controller rollouts)
+planner_state: true
+planner_feedback: true
+stuck_steps: 120
+anomaly_ref: /scratch/users/terran/i2a_stop/anomaly_ref_old.npz
+anomaly_patience: 5

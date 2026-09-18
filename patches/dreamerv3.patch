@@ -1,0 +1,148 @@
+diff -ruN '--exclude=.git' '--exclude=__pycache__' '--exclude=UPSTREAM*' '--exclude=*.pyc' dreamerv3/embodied/jax/agent.py dreamerv3/embodied/jax/agent.py
+--- dreamerv3/embodied/jax/agent.py	2026-09-17 22:57:12.033019427 -0700
++++ dreamerv3/embodied/jax/agent.py	2026-05-28 04:18:26.708702897 -0700
+@@ -172,13 +172,13 @@
+ 
+     self._split = jax.jit(
+         lambda xs: jax.tree.map(lambda x: list(x), xs),
+-        internal.local_sharding(self.policy_sharded),
+-        internal.local_sharding(self.policy_mirrored))
++        in_shardings=internal.local_sharding(self.policy_sharded),
++        out_shardings=internal.local_sharding(self.policy_mirrored))
+     self._stack = jax.jit(
+         lambda xs: jax.tree.map(
+             jnp.stack, xs, is_leaf=lambda x: isinstance(x, list)),
+-        internal.local_sharding(self.policy_mirrored),
+-        internal.local_sharding(self.policy_sharded))
++        in_shardings=internal.local_sharding(self.policy_mirrored),
++        out_shardings=internal.local_sharding(self.policy_sharded))
+ 
+     self._ckpt_groups = internal.grouped_ckpt_fns(
+         self.params, self.jaxcfg.ckpt_chunksize)
+@@ -385,6 +385,10 @@
+         loaded = {}
+         for keys, _, shard_fn in self._ckpt_groups:
+           group = {k: params[k] for k in keys}
++          # Cast to model dtype so shard_fn (compiled for bfloat16) doesn't
++          # get a dtype mismatch, which triggers aot_cache_miss + XLA
++          # recompilation that exhausts GPU memory on large models.
++          group = {k: v.astype(self.params[k].dtype) for k, v in group.items()}
+           group = shard_fn(internal.device_put(group, self.train_mirrored))
+           loaded.update(group)
+         self.params = loaded
+diff -ruN '--exclude=.git' '--exclude=__pycache__' '--exclude=UPSTREAM*' '--exclude=*.pyc' dreamerv3/embodied/jax/internal.py dreamerv3/embodied/jax/internal.py
+--- dreamerv3/embodied/jax/internal.py	2026-09-17 22:57:12.039019423 -0700
++++ dreamerv3/embodied/jax/internal.py	2026-05-26 03:41:26.874632980 -0700
+@@ -277,9 +277,9 @@
+   keys = params.keys()
+   original = {k: params[k].sharding for k in keys}
+   inspec = {k: struct(params[k], original[k]) for k in keys}
+-  gather_fn = jax.jit(lambda x: x, (original,), mirrored).lower(inspec)
++  gather_fn = jax.jit(lambda x: x, in_shardings=(original,), out_shardings=mirrored).lower(inspec)
+   inspec = {k: struct(params[k], mirrored) for k in keys}
+-  shard_fn = jax.jit(lambda x: x, (mirrored,), original).lower(inspec)
++  shard_fn = jax.jit(lambda x: x, in_shardings=(mirrored,), out_shardings=original).lower(inspec)
+   if compile:
+     gather_fn = gather_fn.compile()
+     shard_fn = shard_fn.compile()
+diff -ruN '--exclude=.git' '--exclude=__pycache__' '--exclude=UPSTREAM*' '--exclude=*.pyc' dreamerv3/embodied/jax/opt.py dreamerv3/embodied/jax/opt.py
+--- dreamerv3/embodied/jax/opt.py	2026-09-17 22:57:12.047019417 -0700
++++ dreamerv3/embodied/jax/opt.py	2026-09-14 10:26:32.053156354 -0700
+@@ -27,6 +27,14 @@
+       self.opt = optax.apply_if_finite(self.opt, max_consecutive_errors=1000)
+       self.grad_scale = nj.Variable(jnp.array, 1e4, f32, name='grad_scale')
+       self.good_steps = nj.Variable(jnp.array, 0, i32, name='good_steps')
++    else:
++      # bfloat16 doesn't need gradient scaling, but still needs NaN protection:
++      # a NaN gradient (from any numerical edge case) would corrupt all parameters
++      # via clip_by_global_norm(nan_grad) = nan * scale = nan. Skip those steps.
++      # Unlike float16 where transient overflow is common, bfloat16 NaN gradients
++      # indicate a real numerical problem — never force-apply them (use a large
++      # max_consecutive_errors so the update is practically never forced).
++      self.opt = optax.apply_if_finite(self.opt, max_consecutive_errors=10_000_000)
+ 
+   def __call__(self, lossfn, *args, has_aux=False, **kwargs):
+     metrics = {}
+@@ -73,6 +81,10 @@
+     metrics['loss'] = loss.mean()
+     metrics['updates'] = self.step.read()
+     metrics['grad_norm'] = grad_norm
++    for pref in ('stop_head/', 'pol/', 'dyn/'):   # diagnostic: per-module gradient norms
++      sub = {k: v for k, v in grads.items() if k.startswith(pref)}
++      metrics[f'grad_norm_{pref[:-1]}'] = optax.global_norm(sub) if sub else jnp.float32(-1.0)
++      metrics[f'n_params_{pref[:-1]}'] = jnp.float32(sum(math.prod(v.shape) for v in sub.values()))
+     metrics['grad_rms'] = nets.rms(grads)
+     metrics['update_rms'] = nets.rms(updates)
+     metrics['param_rms'] = nets.rms([x.values for x in self.modules])
+diff -ruN '--exclude=.git' '--exclude=__pycache__' '--exclude=UPSTREAM*' '--exclude=*.pyc' dreamerv3/embodied/jax/transform.py dreamerv3/embodied/jax/transform.py
+--- dreamerv3/embodied/jax/transform.py	2026-09-17 22:57:12.052019414 -0700
++++ dreamerv3/embodied/jax/transform.py	2026-05-26 03:40:43.888688941 -0700
+@@ -53,7 +53,8 @@
+   if print_partition:
+     print_grouping(grouping)
+ 
+-  fn = jax.jit(fn, arg_shardings, params_sharding, static_argnums, None)
++  fn = jax.jit(fn, in_shardings=arg_shardings, out_shardings=params_sharding,
++               static_argnums=static_argnums)
+   params = fn(*dummy_inputs)
+ 
+   return params, params_sharding
+@@ -129,7 +130,8 @@
+         nn.LAYER_CALLBACK = old
+       return outs
+ 
+-  fn = jax.jit(fn, in_shardings, out_shardings, static_argnums, None, donate)
++  fn = jax.jit(fn, in_shardings=in_shardings, out_shardings=out_shardings,
++               static_argnums=static_argnums, donate_argnums=donate)
+ 
+   return fn
+ 
+diff -ruN '--exclude=.git' '--exclude=__pycache__' '--exclude=UPSTREAM*' '--exclude=*.pyc' dreamerv3/embodied/run/train.py dreamerv3/embodied/run/train.py
+--- dreamerv3/embodied/run/train.py	2026-09-17 22:57:12.086019389 -0700
++++ dreamerv3/embodied/run/train.py	2026-09-17 02:54:54.568682927 -0700
+@@ -1,4 +1,5 @@
+ import collections
++import re
+ from functools import partial as bind
+ 
+ import elements
+@@ -87,6 +88,39 @@
+   if args.from_checkpoint:
+     elements.checkpoint.load(args.from_checkpoint, dict(
+         agent=bind(agent.load, regex=args.from_checkpoint_regex)))
++
++  # Wrap agent.load so that extra keys saved by optional components (e.g.
++  # bc_opt from LangCondAgent when bc_separate_batch was True) are silently
++  # dropped when the current model no longer has those parameters.
++  _orig_agent_load = agent.load
++  def _tolerant_agent_load(data, regex=None):
++    if regex is None and isinstance(data, dict) and 'params' in data:
++      import numpy as _np
++      extra = {k for k in data['params'] if k not in agent.params}
++      missing = {k for k in agent.params if k not in data['params']}
++      # Shape mismatches (e.g. one extra encoder input column such as the 'finish' label): zero-pad when the new
++      # parameter is larger along exactly one axis, otherwise leave the fresh init.
++      padded, dropped = [], []
++      for k in list(data['params']):
++        if k in agent.params:
++          old_v, new_shape = data['params'][k], tuple(agent.params[k].shape)
++          if tuple(old_v.shape) != new_shape:
++            diff = [i for i in range(len(new_shape)) if old_v.shape[i] != new_shape[i]] if len(old_v.shape) == len(new_shape) else None
++            if diff and len(diff) == 1 and new_shape[diff[0]] > old_v.shape[diff[0]]:
++              pad = [(0, 0)] * len(new_shape); pad[diff[0]] = (0, new_shape[diff[0]] - old_v.shape[diff[0]])
++              data['params'][k] = _np.pad(_np.asarray(old_v), pad); padded.append(k)
++            else:
++              del data['params'][k]; missing.add(k); dropped.append(k)
++      if padded or dropped:
++        print(f'[Checkpoint] zero-padded {len(padded)} params to the new shape (e.g. {padded[:3]}); dropped {len(dropped)} shape-incompatible (e.g. {dropped[:3]}).')
++      if extra or missing:
++        print(f'[Checkpoint] Dropping {len(extra)} unknown param keys (e.g. {sorted(extra)[:3]}); '
++              f'keeping fresh init for {len(missing)} params absent from the checkpoint (e.g. {sorted(missing)[:3]}). Using partial-load path.')
++        skip = {k.split('/')[0] + '/' for k in extra} | {k.split('/')[0] + '/' for k in missing}
++        regex = '^(?!' + '|'.join(re.escape(x) for x in skip) + ').*'
++    return _orig_agent_load(data, regex=regex)
++  agent.load = _tolerant_agent_load
++
+   cp.load_or_save()
+ 
+   print('Start training loop')

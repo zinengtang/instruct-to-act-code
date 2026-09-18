@@ -1,0 +1,2 @@
+# ablation: completion label = 1 only at the event step (a single "finish" supervision step), 0 elsewhere in the segment
+done_label: event
