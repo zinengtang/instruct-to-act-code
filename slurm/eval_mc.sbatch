@@ -22,8 +22,8 @@ CFG="configs/base.yaml configs/minecraft.yaml configs/size200m.yaml configs/mine
 XVFB="xvfb-run -a -s"
 XARGS='-screen 0 1024x768x24 -ac +extension GLX +render -noreset'
 
-pkill -9 -u "$(whoami)" -f "MalmoMod.*fat.jar" 2>/dev/null || true
-pkill -9 -u "$(whoami)" -f "launchClient.sh"   2>/dev/null || true
+# global Malmo pkill removed 2026-09-18: it killed other running evals on the same node
+# (see above)
 nvidia-smi -L
 echo "== internet check (expect 401) =="
 curl -s -m 8 -o /dev/null -w "%{http_code}\n" https://api.openai.com/v1/models || echo NO_INTERNET

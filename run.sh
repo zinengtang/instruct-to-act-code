@@ -39,8 +39,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p "$LOGDIR"
 
 # Kill zombie Malmo/Java servers from any prior crashed runs
-pkill -9 -u "$(whoami)" -f "MalmoMod.*fat.jar" 2>/dev/null || true
-pkill -9 -u "$(whoami)" -f "launchClient.sh"   2>/dev/null || true
+# global Malmo pkill removed: it killed other running evals on the same node
+# (see above)
 
 # BFC allocator with configurable pre-allocation fraction.
 # Default 0.15 supports up to 5 parallel jobs on H200 (5 × 21 GB = 105 GB).

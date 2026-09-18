@@ -25,8 +25,8 @@ CKPT=/scratch/users/terran/i2a_runs/mc200m_b_seed0/ckpt
 CFG="configs/base.yaml configs/minecraft.yaml configs/size200m.yaml configs/minecraft_b.yaml"
 XVFB="xvfb-run -a -s"
 XARGS='-screen 0 1024x768x24 -ac +extension GLX +render -noreset'
-pkill -9 -u "$(whoami)" -f "MalmoMod.*fat.jar" 2>/dev/null || true
-pkill -9 -u "$(whoami)" -f "launchClient.sh"   2>/dev/null || true
+# global Malmo pkill removed 2026-09-18: it killed other running evals on the same node
+# (see above)
 nvidia-smi -L
 echo "== stop-head data collection: episodes=${EPISODES:-1} max_steps=${MAXSTEPS:-300} ckpt=$(cat $CKPT/latest) =="
 $XVFB "$XARGS" $PY evaluate.py --config $CFG \
